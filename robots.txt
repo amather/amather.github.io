@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: http://amather.github.io/sitemap.xml 
