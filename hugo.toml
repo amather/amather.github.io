@@ -19,6 +19,9 @@ pagination.pagerSize = 5
   fullWidthTheme = false
   centerTheme = true
   showLastUpdated = false
+  menuMore = "Show more"
+  readMore = "Read more"
+  readOtherPosts = "Read other posts"
 
 [languages]
   [languages.en]
