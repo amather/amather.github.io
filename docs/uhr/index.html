@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laras Uhren-Übung ⏰</title>
+<style>
+  :root{
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --accent:#4f6ef7;
+    --accent2:#7c4dff;
+    --good:#2bb673;
+    --bad:#e8543e;
+    --ink:#23304a;
+    --muted:#7a86a1;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    background:linear-gradient(160deg,#eef2ff,#f6f1ff);
+    color:var(--ink);min-height:100vh;padding:18px;
+  }
+  h1{font-size:1.9rem;margin:.2em 0;text-align:center}
+  .sub{text-align:center;color:var(--muted);margin-bottom:14px}
+  .wrap{max-width:760px;margin:0 auto}
+  .tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+  .tab{
+    border:none;cursor:pointer;font-size:1rem;font-weight:600;
+    padding:11px 16px;border-radius:14px;background:#e7ecff;color:var(--ink);
+    transition:.15s;
+  }
+  .tab.active{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(79,110,247,.35)}
+  .card{
+    background:var(--card);border-radius:22px;padding:22px;
+    box-shadow:0 10px 40px rgba(50,60,100,.10);margin-bottom:16px;
+  }
+  .clockwrap{display:flex;justify-content:center;margin:6px 0 14px}
+  svg{touch-action:none;user-select:none}
+  /* Uhren skalieren mit dem Bildschirm; feste quadratische Maße,
+     damit iOS-Safari die Höhe nicht auf 0 zusammenfallen lässt */
+  .clockwrap svg{width:min(86vw,320px);height:min(86vw,320px)}
+  .q{font-size:1.25rem;font-weight:700;text-align:center;margin:6px 0 14px}
+  .q .big{font-size:1.7rem;color:var(--accent2)}
+  .inputs{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+  input[type=number]{
+    width:84px;font-size:1.6rem;text-align:center;padding:8px;border-radius:12px;
+    border:2px solid #d7def2;
+  }
+  input:focus{outline:none;border-color:var(--accent)}
+  .colon{font-size:1.8rem;font-weight:700}
+  .btn{
+    border:none;cursor:pointer;font-size:1.05rem;font-weight:700;color:#fff;
+    background:var(--accent);padding:12px 22px;border-radius:14px;transition:.15s;
+  }
+  .btn:hover{filter:brightness(1.05)}
+  .btn.ghost{background:#e7ecff;color:var(--ink)}
+  .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .feedback{text-align:center;font-size:1.15rem;font-weight:700;min-height:1.6em;margin-top:12px}
+  .feedback.good{color:var(--good)}
+  .feedback.bad{color:var(--bad)}
+  .hint{text-align:center;color:var(--muted);margin-top:6px;font-size:.95rem}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .choice{
+    border:2px solid #d7def2;background:#fff;border-radius:14px;padding:14px;
+    font-size:1.15rem;font-weight:700;cursor:pointer;transition:.12s;text-align:center;
+  }
+  .choice:hover{border-color:var(--accent)}
+  .choice.correct{background:#e3f7ee;border-color:var(--good);color:var(--good)}
+  .choice.wrong{background:#fdeae6;border-color:var(--bad);color:var(--bad)}
+  .choice:disabled{cursor:default}
+  .score{text-align:center;font-size:1.05rem;color:var(--muted);margin-bottom:6px}
+  .score b{color:var(--accent2)}
+  .opts{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:2px 0 8px;font-size:.95rem;color:var(--muted)}
+  .opts label{cursor:pointer;user-select:none}
+  .explain{background:#f3f1ff;border-radius:14px;padding:12px 14px;margin-top:12px;font-size:1rem;line-height:1.5;display:none}
+  .explain.show{display:block}
+  .explain b{color:var(--accent2)}
+  .pill{display:inline-block;background:#fff;border:1px solid #d9d3ff;border-radius:999px;padding:2px 10px;margin:2px;font-weight:600}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;margin:18px 0}
+  @media(max-width:480px){
+    body{padding:10px}
+    h1{font-size:1.55rem}
+    .sub{font-size:.9rem}
+    .card{padding:16px;border-radius:18px}
+    .tab{padding:9px 12px;font-size:.92rem;border-radius:12px}
+    .choices{grid-template-columns:1fr}
+    .choice{padding:13px;font-size:1.05rem}
+    .q{font-size:1.1rem}
+    .q .big{font-size:1.5rem}
+    input[type=number]{width:72px;font-size:1.4rem}
+    .btn{padding:13px 18px}
+    .opts{gap:10px;font-size:1rem}
+    /* größere Tipp-Flächen für Checkboxen auf dem Handy */
+    .opts input[type=checkbox]{width:20px;height:20px;vertical-align:-3px}
+  }
+  /* verhindert ungewolltes Mitscrollen beim Ziehen der Zeiger */
+  #set-clock{touch-action:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⏰ Laras Uhren-Übung</h1>
+  <div class="sub">Lies die Uhr, stelle die Uhr und lerne „Viertel, Halb, Dreiviertel“</div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="read">1 · Wie spät ist es?</button>
+    <button class="tab" data-tab="set">2 · Stelle die Uhr</button>
+    <button class="tab" data-tab="say">3 · Viertel & Halb</button>
+  </div>
+
+  <!-- ===================== MODUS 1: ABLESEN ===================== -->
+  <section id="read" class="mode card">
+    <div class="score">Richtig: <b id="read-score">0</b> · Versuche: <span id="read-tries">0</span></div>
+    <div class="q">Wie spät ist es auf der Uhr?</div>
+    <div class="clockwrap"><svg id="read-clock" width="300" height="300" viewBox="0 0 300 300"></svg></div>
+
+    <div class="opts">
+      <label><input type="checkbox" id="read-5min" checked> nur volle 5 Minuten</label>
+      <label><input type="checkbox" id="read-hide" checked> Zahlen verstecken 🙈</label>
+    </div>
+
+    <div class="inputs">
+      <input type="number" id="read-h" min="0" max="23" placeholder="Std">
+      <span class="colon">:</span>
+      <input type="number" id="read-m" min="0" max="59" placeholder="Min">
+      <span style="font-weight:700">Uhr</span>
+    </div>
+    <div class="hint">Tipp: Schreib die Zeit, wie sie auf der Uhr steht (z.&nbsp;B. 7 oder 19 für dieselbe Zeigerstellung).</div>
+
+    <div class="row">
+      <button class="btn" id="read-check">Prüfen ✓</button>
+      <button class="btn ghost" id="read-next">Neue Uhr ↻</button>
+    </div>
+    <div class="feedback" id="read-fb"></div>
+  </section>
+
+  <!-- ===================== MODUS 2: EINSTELLEN ===================== -->
+  <section id="set" class="mode card" style="display:none">
+    <div class="score">Richtig: <b id="set-score">0</b> · Versuche: <span id="set-tries">0</span></div>
+    <div class="q">Stelle die Uhr auf <span class="big" id="set-target">20:45</span> Uhr</div>
+    <div class="clockwrap"><svg id="set-clock" width="320" height="320" viewBox="0 0 300 300"></svg></div>
+    <div class="opts">
+      <label><input type="checkbox" id="set-hide" checked> Zahlen verstecken 🙈</label>
+    </div>
+    <div class="hint">Ziehe die Zeiger mit dem Finger oder der Maus. <br>Der <b style="color:#e8543e">dicke kurze</b> Zeiger ist die Stunde, der <b style="color:#23304a">dünne lange</b> die Minute.</div>
+
+    <div class="row">
+      <button class="btn" id="set-check">Prüfen ✓</button>
+      <button class="btn ghost" id="set-next">Neue Aufgabe ↻</button>
+    </div>
+    <div class="feedback" id="set-fb"></div>
+  </section>
+
+  <!-- ===================== MODUS 3: UMGANGSSPRACHE ===================== -->
+  <section id="say" class="mode card" style="display:none">
+    <div class="score">Richtig: <b id="say-score">0</b> · Versuche: <span id="say-tries">0</span></div>
+    <div class="q" id="say-q">Wie sagt man diese Uhrzeit?</div>
+    <div class="clockwrap"><svg id="say-clock" width="280" height="280" viewBox="0 0 300 300"></svg></div>
+    <div class="opts">
+      <label><input type="checkbox" id="say-hide" checked> Zahlen verstecken 🙈</label>
+    </div>
+    <div class="q"><span class="big" id="say-digital">4:30</span> Uhr</div>
+
+    <div class="choices" id="say-choices"></div>
+    <div class="explain" id="say-explain"></div>
+
+    <div class="row">
+      <button class="btn ghost" id="say-next">Nächste ↻</button>
+    </div>
+    <div class="feedback" id="say-fb"></div>
+  </section>
+
+  <footer>Selbst gemacht für Lara 💜 — einfach diese Datei im Browser öffnen.</footer>
+</div>
+
+<script>
+/* ============================================================
+   Hilfsfunktionen
+============================================================ */
+const ZAHL = ["Zwölf","Eins","Zwei","Drei","Vier","Fünf","Sechs","Sieben","Acht","Neun","Zehn","Elf","Zwölf"];
+function wort(h){ h = ((h%12)+12)%12; return ZAHL[h===0?12:h]; } // 1..12 -> Wort, 0->Zwölf
+function h12(h){ h = h%12; return h===0?12:h; }
+function naechste(h){ let n = h12(h)+1; return n>12?1:n; }
+function pad(n){ return String(n).padStart(2,"0"); }
+function randInt(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+
+/* ============================================================
+   Analoge Uhr zeichnen (SVG)
+============================================================ */
+const NS = "http://www.w3.org/2000/svg";
+function el(name, attrs){
+  const e = document.createElementNS(NS, name);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+const CX=150, CY=150, R=135;
+
+// Zeichnet das Ziffernblatt; gibt Stunden- und Minutenzeiger zurück
+function drawClock(svg, hours, minutes, opts){
+  opts = opts || {};
+  svg.innerHTML = "";
+  // Hintergrundkreis
+  svg.appendChild(el("circle",{cx:CX,cy:CY,r:R,fill:"#fff",stroke:"#4f6ef7","stroke-width":6}));
+
+  // Minuten- und Stundenstriche
+  for(let i=0;i<60;i++){
+    const a = i*6 * Math.PI/180;
+    const big = i%5===0;
+    const r1 = R-(big?16:8), r2 = R-2;
+    svg.appendChild(el("line",{
+      x1:CX+r1*Math.sin(a), y1:CY-r1*Math.cos(a),
+      x2:CX+r2*Math.sin(a), y2:CY-r2*Math.cos(a),
+      stroke:big?"#23304a":"#c3cbe2", "stroke-width":big?3:1.5, "stroke-linecap":"round"
+    }));
+  }
+  // Zahlen 1-12 (außen) und 13-24 (innen, hell)
+  if(!opts.hideNumbers) for(let i=1;i<=12;i++){
+    const a = i*30 * Math.PI/180;
+    const rO = R-34;
+    const t = el("text",{x:CX+rO*Math.sin(a), y:CY-rO*Math.cos(a)+9,
+      "text-anchor":"middle","font-size":26,"font-weight":700,fill:"#23304a"});
+    t.textContent = i; svg.appendChild(t);
+    const rI = R-62;
+    const inner = i+12; // 13..24
+    const t2 = el("text",{x:CX+rI*Math.sin(a), y:CY-rI*Math.cos(a)+6,
+      "text-anchor":"middle","font-size":14,"font-weight":600,fill:"#b0a4f0"});
+    t2.textContent = inner===24?24:inner; svg.appendChild(t2);
+  }
+
+  // Stundenzeiger (kurz, dick, rot)
+  const hAng = ((hours%12) + minutes/60) * 30;
+  const hand_h = el("line",{x1:CX,y1:CY,x2:CX,y2:CY-70,
+    stroke:"#e8543e","stroke-width":9,"stroke-linecap":"round",
+    transform:`rotate(${hAng} ${CX} ${CY})`});
+  // Minutenzeiger (lang, dünn, dunkel)
+  const mAng = minutes*6;
+  const hand_m = el("line",{x1:CX,y1:CY,x2:CX,y2:CY-104,
+    stroke:"#23304a","stroke-width":6,"stroke-linecap":"round",
+    transform:`rotate(${mAng} ${CX} ${CY})`});
+  svg.appendChild(hand_h); svg.appendChild(hand_m);
+  // Mittelpunkt
+  svg.appendChild(el("circle",{cx:CX,cy:CY,r:8,fill:"#4f6ef7"}));
+  return {hand_h, hand_m};
+}
+
+/* ============================================================
+   MODUS 1: ABLESEN
+============================================================ */
+const R1 = {svg:document.getElementById("read-clock"), h:0, m:0, score:0, tries:0};
+function read_new(){
+  const step = document.getElementById("read-5min").checked ? 5 : 1;
+  R1.h = randInt(0,23);
+  R1.m = (Math.floor(randInt(0,59)/step))*step;
+  drawClock(R1.svg, R1.h, R1.m, {hideNumbers: document.getElementById("read-hide").checked});
+  document.getElementById("read-h").value = "";
+  document.getElementById("read-m").value = "";
+  document.getElementById("read-fb").textContent = "";
+  document.getElementById("read-fb").className = "feedback";
+}
+function read_check(){
+  const fb = document.getElementById("read-fb");
+  let h = parseInt(document.getElementById("read-h").value,10);
+  let m = parseInt(document.getElementById("read-m").value,10);
+  if(isNaN(h)||isNaN(m)){ fb.textContent="Bitte Stunde und Minute eintragen."; fb.className="feedback bad"; return; }
+  R1.tries++; document.getElementById("read-tries").textContent = R1.tries;
+  // Akzeptiere die Vormittags- und Nachmittagslesart
+  const okM = (m === R1.m);
+  const okH = (h%12) === (R1.h%12);
+  if(okM && okH){
+    R1.score++; document.getElementById("read-score").textContent = R1.score;
+    const v = h12(R1.h), gross = R1.h%12 + (R1.h>=12?12:0); // nicht genutzt
+    fb.innerHTML = `Super! 🎉 Das ist <b>${pad(h12(R1.h))}:${pad(R1.m)}</b> Uhr (vormittags) oder <b>${pad((R1.h%12)+12===24?12:(R1.h%12)+12)}:${pad(R1.m)}</b> Uhr (nachmittags/abends).`;
+    fb.className = "feedback good";
+  } else {
+    fb.innerHTML = `Fast! Schau nochmal genau hin. 🔎 Der kurze Zeiger zeigt die Stunde, der lange die Minute.`;
+    fb.className = "feedback bad";
+  }
+}
+document.getElementById("read-check").onclick = read_check;
+document.getElementById("read-next").onclick = read_new;
+document.getElementById("read-hide").addEventListener("change", ()=>{
+  drawClock(R1.svg, R1.h, R1.m, {hideNumbers: document.getElementById("read-hide").checked});
+});
+document.getElementById("read-m").addEventListener("keydown", e=>{ if(e.key==="Enter") read_check(); });
+
+/* ============================================================
+   MODUS 2: EINSTELLEN (Zeiger ziehen)
+============================================================ */
+const R2 = {svg:document.getElementById("set-clock"), th:0, tm:0, h:12, m:0, score:0, tries:0, drag:null};
+function set_new(){
+  // Ziel: bevorzugt "schöne" Zeiten, manchmal 5er-Schritte
+  R2.th = randInt(0,23);
+  const opts = [0,5,10,15,20,25,30,35,40,45,50,55];
+  R2.tm = opts[randInt(0,opts.length-1)];
+  document.getElementById("set-target").textContent = `${pad(R2.th)}:${pad(R2.tm)}`;
+  R2.h = 12; R2.m = 0;
+  set_render();
+  const fb=document.getElementById("set-fb"); fb.textContent=""; fb.className="feedback";
+}
+function set_render(){
+  const hands = drawClock(R2.svg, R2.h, R2.m, {hideNumbers: document.getElementById("set-hide").checked});
+  hands.hand_m.style.cursor="grab";
+  hands.hand_h.style.cursor="grab";
+  // größere unsichtbare "Griff"-Flächen zum leichteren Ziehen
+  addGrip(R2.svg, "m");
+  addGrip(R2.svg, "h");
+}
+function addGrip(svg, which){
+  const ang = which==="m" ? R2.m*6 : ((R2.h%12)+R2.m/60)*30;
+  const len = which==="m" ? 104 : 70;
+  const a = (ang-90)*Math.PI/180;
+  const grip = el("circle",{cx:CX+len*Math.cos(a), cy:CY+len*Math.sin(a), r:22, fill:"transparent", cursor:"grab"});
+  grip.dataset.hand = which;
+  svg.appendChild(grip);
+}
+function pointAngle(svg, ev){
+  const rect = svg.getBoundingClientRect();
+  const x = (ev.touches?ev.touches[0].clientX:ev.clientX) - rect.left;
+  const y = (ev.touches?ev.touches[0].clientY:ev.clientY) - rect.top;
+  const sx = x * 300/rect.width, sy = y * 300/rect.height;
+  let deg = Math.atan2(sy-CY, sx-CX)*180/Math.PI + 90;
+  return (deg+360)%360;
+}
+function set_down(ev){
+  let hand = ev.target.dataset.hand;
+  if(!hand){
+    // entscheide anhand der Nähe: minute vs stunde
+    const deg = pointAngle(R2.svg, ev);
+    hand = "m";
+  }
+  R2.drag = hand; ev.preventDefault();
+}
+function set_move(ev){
+  if(!R2.drag) return;
+  ev.preventDefault();
+  const deg = pointAngle(R2.svg, ev);
+  if(R2.drag==="m"){
+    R2.m = Math.round(deg/6)%60;
+  } else {
+    let hh = Math.round(deg/30)%12;
+    R2.h = hh===0?12:hh;
+  }
+  set_render();
+}
+function set_up(){ R2.drag=null; }
+["mousedown","touchstart"].forEach(e=>R2.svg.addEventListener(e,set_down,{passive:false}));
+["mousemove","touchmove"].forEach(e=>R2.svg.addEventListener(e,set_move,{passive:false}));
+["mouseup","touchend","mouseleave"].forEach(e=>R2.svg.addEventListener(e,set_up));
+function set_check(){
+  R2.tries++; document.getElementById("set-tries").textContent=R2.tries;
+  const fb=document.getElementById("set-fb");
+  const okH = (R2.h%12) === (R2.th%12);
+  const okM = R2.m === R2.tm;
+  if(okH && okM){
+    R2.score++; document.getElementById("set-score").textContent=R2.score;
+    fb.textContent = "Perfekt eingestellt! 🌟"; fb.className="feedback good";
+  } else if(okM && !okH){
+    fb.textContent = "Die Minute stimmt! Schau nochmal auf den Stundenzeiger. 🕐"; fb.className="feedback bad";
+  } else if(okH && !okM){
+    fb.textContent = "Die Stunde stimmt! Schau nochmal auf den Minutenzeiger. 🕧"; fb.className="feedback bad";
+  } else {
+    fb.textContent = "Noch nicht ganz – probier beide Zeiger nochmal. 💪"; fb.className="feedback bad";
+  }
+}
+document.getElementById("set-check").onclick = set_check;
+document.getElementById("set-next").onclick = set_new;
+document.getElementById("set-hide").addEventListener("change", set_render);
+
+/* ============================================================
+   MODUS 3: VIERTEL / HALB / DREIVIERTEL
+============================================================ */
+const R3 = {svg:document.getElementById("say-clock"), h:0, m:0, score:0, tries:0};
+
+// österreichische Sprechweise
+function oesterreich(h,m){
+  const n = wort(naechste(h));
+  if(m===0) return `${wort(h12(h))} Uhr`;
+  if(m===15) return `Viertel ${n}`;
+  if(m===30) return `Halb ${n}`;
+  if(m===45) return `Dreiviertel ${n}`;
+}
+// "nach/vor"-Sprechweise (deutsche Standardform)
+function nachVor(h,m){
+  const cur = wort(h12(h)), n = wort(naechste(h));
+  if(m===0) return `${cur} Uhr`;
+  if(m===15) return `Viertel nach ${cur}`;
+  if(m===30) return `Halb ${n}`;
+  if(m===45) return `Viertel vor ${n}`;
+}
+function say_new(){
+  R3.h = randInt(0,23);
+  R3.m = [0,15,30,45][randInt(0,3)];
+  drawClock(R3.svg, R3.h, R3.m, {hideNumbers: document.getElementById("say-hide").checked});
+  document.getElementById("say-digital").textContent = `${pad(R3.h)}:${pad(R3.m)}`;
+  const correct = oesterreich(R3.h, R3.m);
+
+  // Distraktoren bauen
+  const set = new Set([correct]);
+  const tries = 0;
+  while(set.size<4){
+    let dh = R3.h, dm = R3.m;
+    const r = Math.random();
+    if(r<0.5){ const ms=[0,15,30,45].filter(x=>x!==R3.m); dm = ms[randInt(0,ms.length-1)]; }
+    else { dh = (R3.h + randInt(1,11))%24; }
+    set.add(oesterreich(dh,dm));
+  }
+  const arr = [...set];
+  for(let i=arr.length-1;i>0;i--){ const j=randInt(0,i); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+
+  const box = document.getElementById("say-choices");
+  box.innerHTML = "";
+  arr.forEach(opt=>{
+    const b = document.createElement("button");
+    b.className="choice"; b.textContent=opt;
+    b.onclick = ()=>say_pick(b, opt, correct);
+    box.appendChild(b);
+  });
+  document.getElementById("say-fb").textContent="";
+  document.getElementById("say-fb").className="feedback";
+  document.getElementById("say-explain").className="explain";
+}
+function say_pick(btn, opt, correct){
+  if(btn.disabled) return;
+  R3.tries++; document.getElementById("say-tries").textContent=R3.tries;
+  const all = document.querySelectorAll("#say-choices .choice");
+  all.forEach(b=>{ b.disabled=true; if(b.textContent===correct) b.classList.add("correct"); });
+  const fb = document.getElementById("say-fb");
+  if(opt===correct){
+    R3.score++; document.getElementById("say-score").textContent=R3.score;
+    fb.textContent="Richtig! 🎉"; fb.className="feedback good";
+  } else {
+    btn.classList.add("wrong");
+    fb.textContent="Nicht ganz – die richtige Antwort leuchtet grün."; fb.className="feedback bad";
+  }
+  // Erklärung mit allen Sprechweisen
+  const ex = document.getElementById("say-explain");
+  const ot = oesterreich(R3.h,R3.m);
+  const nv = nachVor(R3.h,R3.m);
+  let extra = "";
+  if(R3.m===15) extra = `Man kann auch sagen: <span class="pill">Fünfzehn nach ${wort(h12(R3.h))}</span>`;
+  if(R3.m===45) extra = `Man kann auch sagen: <span class="pill">Fünfzehn vor ${wort(naechste(R3.h))}</span>`;
+  ex.innerHTML = `<b>${pad(R3.h)}:${pad(R3.m)} Uhr</b> heißt:<br>
+    🇦🇹 Österreichisch: <span class="pill">${ot}</span><br>
+    💬 Auch üblich: <span class="pill">${nv}</span> ${extra}`;
+  ex.classList.add("show");
+}
+document.getElementById("say-next").onclick = say_new;
+document.getElementById("say-hide").addEventListener("change", ()=>{
+  drawClock(R3.svg, R3.h, R3.m, {hideNumbers: document.getElementById("say-hide").checked});
+});
+
+/* ============================================================
+   TABS
+============================================================ */
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    document.querySelectorAll(".mode").forEach(m=>m.style.display="none");
+    document.getElementById(t.dataset.tab).style.display="block";
+  };
+});
+
+/* Start */
+read_new(); set_new(); say_new();
+</script>
+</body>
+</html>
